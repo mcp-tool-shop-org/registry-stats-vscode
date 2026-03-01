@@ -6,6 +6,7 @@ import { renderDevMarkdown } from "../reporters/dev.js";
 import { renderLLMJsonl } from "../reporters/llm.js";
 import { renderExecutivePdf } from "../reporters/executive.js";
 import { log, friendlyError } from "../util.js";
+import { generateInsights } from "../analysis/index.js";
 
 export type Audience = "executive" | "llm" | "dev";
 
@@ -134,6 +135,18 @@ function buildExecutivePreview(run: import("../run-model.js").Run): string {
     for (const p of top) {
       const w = p.stats?.downloads.lastWeek;
       lines.push(`  ${p.name} (${p.registry}): ${w != null ? w.toLocaleString() : "—"}`);
+    }
+  }
+
+  // Insights
+  const insights = generateInsights(run);
+  if (insights.length > 0) {
+    lines.push("");
+    lines.push("INSIGHTS & SIGNALS");
+    for (const s of insights) {
+      const tag = s.severity === "high" ? "HIGH" : s.severity === "moderate" ? "MOD" : "LOW";
+      const conf = s.confidence < 1.0 ? ` (confidence: ${s.confidence.toFixed(2)})` : "";
+      lines.push(`  [${tag}] ${s.message}${conf}`);
     }
   }
 

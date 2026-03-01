@@ -1,5 +1,7 @@
 import type { Run, PkgResult } from "../run-model.js";
 import { formatDownloadsLong, formatDownloads } from "../util.js";
+import { generateInsights } from "../analysis/index.js";
+import type { ExecutiveSignal, Severity } from "../analysis/index.js";
 
 // pdfmake types (minimal — we only use what we need)
 interface PdfContent {
@@ -160,6 +162,50 @@ function buildDocDefinition(run: Run): PdfDocDef {
     margin: [0, 0, 0, 16],
   });
 
+  // ── Insights & Signals ──────────────────────────────────────
+  const insights = generateInsights(run);
+  if (insights.length > 0) {
+    content.push({
+      text: "Insights & Signals",
+      fontSize: 13,
+      bold: true,
+      color: "#1a1a2e",
+      margin: [0, 0, 0, 8],
+    });
+
+    const categories = ["concentration", "momentum", "exposure", "opportunity"] as const;
+    for (const cat of categories) {
+      const group = insights.filter((s) => s.category === cat);
+      if (group.length === 0) continue;
+
+      content.push({
+        text: cat.charAt(0).toUpperCase() + cat.slice(1),
+        fontSize: 10,
+        bold: true,
+        color: "#444",
+        margin: [0, 4, 0, 2],
+      });
+
+      for (const signal of group) {
+        const badge = severityBadge(signal.severity);
+        const parts: PdfContent[] = [
+          { text: `${badge} `, fontSize: 9, color: severityColor(signal.severity), bold: true },
+          { text: signal.message, fontSize: 9 },
+        ];
+        if (signal.confidence < 1.0) {
+          parts.push({
+            text: `  (confidence: ${signal.confidence.toFixed(2)})`,
+            fontSize: 8,
+            color: "#999",
+          });
+        }
+        content.push({ text: parts, margin: [8, 1, 0, 1] } as PdfContent);
+      }
+    }
+
+    content.push({ text: "", margin: [0, 0, 0, 8] } as PdfContent);
+  }
+
   // ── Risks & Recommendations ───────────────────────────────────
   const risks = buildRisks(run);
   if (risks.length > 0) {
@@ -175,6 +221,25 @@ function buildDocDefinition(run: Run): PdfDocDef {
       margin: [0, 0, 0, 16],
     } as PdfContent);
   }
+
+  // ── Methodology ──────────────────────────────────────────────
+  content.push({
+    text: "Methodology",
+    fontSize: 10,
+    bold: true,
+    color: "#999",
+    margin: [0, 8, 0, 4],
+  });
+  content.push({
+    ul: [
+      { text: "Weekly = last 7-day download aggregate", fontSize: 8, color: "#999" },
+      { text: "Monthly = last 30-day download aggregate", fontSize: 8, color: "#999" },
+      { text: "Momentum = week-vs-month velocity proxy (not discrete data points)", fontSize: 8, color: "#999" },
+      { text: "Signals shown only when confidence \u2265 0.7", fontSize: 8, color: "#999" },
+      { text: "Threshold-based model (v1)", fontSize: 8, color: "#999" },
+    ],
+    margin: [0, 0, 0, 8],
+  } as PdfContent);
 
   // ── Footer ────────────────────────────────────────────────────
   return {
@@ -215,6 +280,22 @@ function registryColor(registry: string): string {
     docker: "#2496ed",
   };
   return colors[registry] ?? "#333";
+}
+
+function severityBadge(severity: Severity): string {
+  switch (severity) {
+    case "high": return "\u25CF HIGH";
+    case "moderate": return "\u25CF MOD";
+    case "low": return "\u25CB LOW";
+  }
+}
+
+function severityColor(severity: Severity): string {
+  switch (severity) {
+    case "high": return "#e74c3c";
+    case "moderate": return "#f39c12";
+    case "low": return "#3498db";
+  }
 }
 
 function buildRisks(run: Run): string[] {

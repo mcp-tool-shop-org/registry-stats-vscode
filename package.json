@@ -2,7 +2,7 @@
   "name": "registry-stats-vscode",
   "displayName": "Registry Stats",
   "description": "Multi-registry download stats for npm, PyPI, NuGet, VS Code Marketplace, and Docker Hub",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "mcp-tool-shop",
   "author": "mcp-tool-shop",
   "license": "MIT",

@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.2.0
+
+- **Intelligence Layer** — structured insights and signals in Executive reports
+  - Concentration signal: flags when top 3 packages hold 65%+ of weekly downloads
+  - Momentum signal: detects packages accelerating or declining via week-vs-month velocity proxy
+  - Registry exposure signal: warns when 80%+ of downloads come from a single registry
+  - Opportunity signal: surfaces mid-tier packages with 15%+ acceleration
+  - All signals are confidence-gated (≥ 0.7), deterministic, and numerically justified
+  - New "Insights & Signals" section in Executive PDF and sidebar preview
+  - New "Methodology" block at bottom of Executive PDF
+  - 18 new tests (52 total)
+
 ## 1.1.0
 
 - **CodeLens** — inline download stats above every dependency in `package.json`
