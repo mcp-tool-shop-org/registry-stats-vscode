@@ -1,0 +1,12 @@
+.github/
+src/
+test/
+site/
+node_modules/
+.gitignore
+tsconfig.json
+esbuild.mjs
+vitest.config.ts
+*.map
+.vscode/
+.polyglot-cache.json

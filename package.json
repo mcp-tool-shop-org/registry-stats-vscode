@@ -1,0 +1,188 @@
+{
+  "name": "registry-stats-vscode",
+  "displayName": "Registry Stats",
+  "description": "Multi-registry download stats for npm, PyPI, NuGet, VS Code Marketplace, and Docker Hub",
+  "version": "1.0.0",
+  "publisher": "mcp-tool-shop",
+  "author": "mcp-tool-shop",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcp-tool-shop-org/registry-stats-vscode.git"
+  },
+  "homepage": "https://mcp-tool-shop-org.github.io/registry-stats-vscode/",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "npm",
+    "pypi",
+    "nuget",
+    "docker",
+    "downloads",
+    "stats",
+    "registry"
+  ],
+  "icon": "media/icon.png",
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "registryStats",
+          "title": "Registry Stats",
+          "icon": "$(package)"
+        }
+      ]
+    },
+    "views": {
+      "registryStats": [
+        {
+          "type": "webview",
+          "id": "registryStats.sidebar",
+          "name": "Reports"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "registryStats.generateReport",
+        "title": "Generate Report",
+        "category": "Registry Stats",
+        "icon": "$(output)"
+      },
+      {
+        "command": "registryStats.refresh",
+        "title": "Refresh Stats",
+        "category": "Registry Stats",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "registryStats.openSidebar",
+        "title": "Open Sidebar",
+        "category": "Registry Stats"
+      },
+      {
+        "command": "registryStats.copyExecutiveSummary",
+        "title": "Copy Executive Summary",
+        "category": "Registry Stats"
+      },
+      {
+        "command": "registryStats.copyLLMJsonl",
+        "title": "Copy LLM Log (JSONL)",
+        "category": "Registry Stats"
+      },
+      {
+        "command": "registryStats.copyDevMarkdown",
+        "title": "Copy Dev Log (Markdown)",
+        "category": "Registry Stats"
+      }
+    ],
+    "configuration": {
+      "title": "Registry Stats",
+      "properties": {
+        "registryStats.enabledRegistries": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "npm",
+              "pypi",
+              "nuget",
+              "vscode",
+              "docker"
+            ]
+          },
+          "default": [
+            "npm",
+            "pypi",
+            "nuget",
+            "vscode",
+            "docker"
+          ],
+          "description": "Registries to query for stats"
+        },
+        "registryStats.cacheTtlHours": {
+          "type": "object",
+          "properties": {
+            "npm": { "type": "number", "default": 6 },
+            "pypi": { "type": "number", "default": 6 },
+            "nuget": { "type": "number", "default": 12 },
+            "vscode": { "type": "number", "default": 12 },
+            "docker": { "type": "number", "default": 24 }
+          },
+          "default": { "npm": 6, "pypi": 6, "nuget": 12, "vscode": 12, "docker": 24 },
+          "description": "Cache TTL in hours per registry"
+        },
+        "registryStats.statusBar.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show download stats in the status bar"
+        },
+        "registryStats.hover.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show download stats on hover over dependencies"
+        },
+        "registryStats.devLogging.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable dev-level trace logging"
+        },
+        "registryStats.devLogging.level": {
+          "type": "string",
+          "enum": [
+            "info",
+            "debug"
+          ],
+          "default": "info",
+          "description": "Dev logging verbosity"
+        },
+        "registryStats.dockerToken": {
+          "type": "string",
+          "default": "",
+          "description": "Docker Hub auth token (raises rate limits)"
+        },
+        "registryStats.maxConcurrentRequests": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Max concurrent registry requests"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "verify": "npm run lint && npm test && npm run build",
+    "package": "vsce package --no-dependencies",
+    "publish": "vsce publish --no-dependencies"
+  },
+  "dependencies": {
+    "@mcptoolshop/registry-stats": "^1.2.1",
+    "pdfmake": "^0.2.18"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.4.0",
+    "vitest": "^3.0.0"
+  }
+}
