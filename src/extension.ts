@@ -5,6 +5,8 @@ import { StatusBarController } from "./views/status-bar.js";
 import { SidebarProvider } from "./views/sidebar.js";
 import { registerHoverProviders } from "./hover.js";
 import { registerCommands } from "./commands.js";
+import { StatsCodeLensProvider, handleCodeLensClick } from "./codelens.js";
+import { getConfig } from "./config.js";
 import { initOutputChannel, log } from "./util.js";
 
 export function activate(context: vscode.ExtensionContext): void {
@@ -31,10 +33,27 @@ export function activate(context: vscode.ExtensionContext): void {
   const hovers = registerHoverProviders(scanner, service);
   context.subscriptions.push(...hovers);
 
-  // 6. Commands
+  // 6. CodeLens
+  const codeLensProvider = new StatsCodeLensProvider(service);
+  context.subscriptions.push(
+    codeLensProvider,
+    vscode.languages.registerCodeLensProvider(
+      { language: "json", pattern: "**/package.json" },
+      codeLensProvider,
+    ),
+    vscode.commands.registerCommand("registryStats.codeLensClick", (ref, stat) =>
+      handleCodeLensClick(service, ref, stat),
+    ),
+    vscode.commands.registerCommand("registryStats.refreshCodeLens", () => {
+      codeLensProvider.refresh();
+      vscode.window.showInformationMessage("Registry Stats: CodeLens refreshed.");
+    }),
+  );
+
+  // 7. Commands
   registerCommands(context, scanner, service, sidebar);
 
-  // 7. Re-scan on manifest save
+  // 8. Re-scan on manifest save
   context.subscriptions.push(
     vscode.workspace.onDidSaveTextDocument((doc) => {
       const name = doc.fileName.split(/[/\\]/).pop() ?? "";
@@ -44,6 +63,11 @@ export function activate(context: vscode.ExtensionContext): void {
         name.endsWith(".csproj")
       ) {
         scanner.scan().then(() => statusBar.refresh());
+
+        // CodeLens refresh on save (if enabled)
+        if (name === "package.json" && getConfig().codeLens.refreshOnSave) {
+          codeLensProvider.debouncedRefresh();
+        }
       }
     }),
   );

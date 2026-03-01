@@ -2,7 +2,7 @@
   "name": "registry-stats-vscode",
   "displayName": "Registry Stats",
   "description": "Multi-registry download stats for npm, PyPI, NuGet, VS Code Marketplace, and Docker Hub",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "mcp-tool-shop",
   "author": "mcp-tool-shop",
   "license": "MIT",
@@ -84,6 +84,12 @@
         "command": "registryStats.copyDevMarkdown",
         "title": "Copy Dev Log (Markdown)",
         "category": "Registry Stats"
+      },
+      {
+        "command": "registryStats.refreshCodeLens",
+        "title": "Refresh CodeLens",
+        "category": "Registry Stats",
+        "icon": "$(refresh)"
       }
     ],
     "configuration": {
@@ -157,6 +163,33 @@
           "minimum": 1,
           "maximum": 10,
           "description": "Max concurrent registry requests"
+        },
+        "registryStats.codeLens.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show inline download stats above dependencies (opt-in)"
+        },
+        "registryStats.codeLens.maxPerFile": {
+          "type": "number",
+          "default": 50,
+          "minimum": 1,
+          "maximum": 500,
+          "description": "Max CodeLens items per file (prevents lag on large manifests)"
+        },
+        "registryStats.codeLens.showFreshness": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show cache age in CodeLens text"
+        },
+        "registryStats.codeLens.showTrend": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show trend arrow in CodeLens (when confidence ≥ 0.7)"
+        },
+        "registryStats.codeLens.refreshOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Auto-refresh CodeLens data when file is saved"
         }
       }
     }

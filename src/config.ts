@@ -1,6 +1,14 @@
 import * as vscode from "vscode";
 import type { RegistryName } from "@mcptoolshop/registry-stats";
 
+export interface CodeLensConfig {
+  enabled: boolean;
+  maxPerFile: number;
+  showFreshness: boolean;
+  showTrend: boolean;
+  refreshOnSave: boolean;
+}
+
 export interface ExtConfig {
   enabledRegistries: RegistryName[];
   cacheTtlHours: Record<string, number>;
@@ -10,6 +18,7 @@ export interface ExtConfig {
   devLoggingLevel: "info" | "debug";
   dockerToken: string;
   maxConcurrentRequests: number;
+  codeLens: CodeLensConfig;
 }
 
 const DEFAULT_TTL: Record<string, number> = {
@@ -33,6 +42,13 @@ export function getConfig(): ExtConfig {
     devLoggingLevel: cfg.get<"info" | "debug">("devLogging.level", "info"),
     dockerToken: cfg.get<string>("dockerToken", ""),
     maxConcurrentRequests: cfg.get<number>("maxConcurrentRequests", 3),
+    codeLens: {
+      enabled: cfg.get<boolean>("codeLens.enabled", false),
+      maxPerFile: cfg.get<number>("codeLens.maxPerFile", 50),
+      showFreshness: cfg.get<boolean>("codeLens.showFreshness", true),
+      showTrend: cfg.get<boolean>("codeLens.showTrend", true),
+      refreshOnSave: cfg.get<boolean>("codeLens.refreshOnSave", false),
+    },
   };
 }
 
