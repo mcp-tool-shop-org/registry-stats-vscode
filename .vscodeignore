@@ -10,3 +10,9 @@ vitest.config.ts
 *.map
 .vscode/
 .polyglot-cache.json
+SHIP_GATE.md
+SCORECARD.md
+SECURITY.md
+README.*.md
+*.vsix
+plan.md

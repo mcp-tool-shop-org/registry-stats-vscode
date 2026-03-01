@@ -12,7 +12,8 @@
   },
   "homepage": "https://mcp-tool-shop-org.github.io/registry-stats-vscode/",
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.85.0",
+    "node": ">=20.0.0"
   },
   "categories": [
     "Other",
