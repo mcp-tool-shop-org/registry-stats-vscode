@@ -2,7 +2,9 @@ import * as vscode from "vscode";
 import type { WorkspaceScanner } from "./scanner.js";
 import type { StatsService } from "./stats-service.js";
 import type { SidebarProvider, Audience } from "./views/sidebar.js";
+import type { RunScope } from "./run-model.js";
 import { buildRun } from "./run-model.js";
+import { loadPortfolio } from "./portfolio.js";
 import { renderDevMarkdown } from "./reporters/dev.js";
 import { renderLLMJsonl } from "./reporters/llm.js";
 import { renderExecutivePdf } from "./reporters/executive.js";
@@ -42,7 +44,18 @@ async function generateReport(
   scanner: WorkspaceScanner,
   service: StatsService,
 ): Promise<void> {
-  // Step 1: Pick audience
+  // Step 1: Pick scope
+  const scopePick = await vscode.window.showQuickPick(
+    [
+      { label: "All Dependencies", description: "Every dependency in the workspace", value: "all" as RunScope },
+      { label: "Current Package", description: "Only the primary package", value: "primary" as RunScope },
+      { label: "My Packages (Portfolio)", description: "Your cross-registry portfolio", value: "portfolio" as RunScope },
+    ],
+    { placeHolder: "Select scope" },
+  );
+  if (!scopePick) return;
+
+  // Step 2: Pick audience
   const audiencePick = await vscode.window.showQuickPick(
     [
       { label: "Executive (PDF)", description: "One-page summary for sharing", value: "executive" as Audience },
@@ -53,7 +66,7 @@ async function generateReport(
   );
   if (!audiencePick) return;
 
-  // Step 2: Pick output
+  // Step 3: Pick output
   const outputPick = await vscode.window.showQuickPick(
     [
       { label: "Copy to Clipboard", value: "copy" },
@@ -68,7 +81,15 @@ async function generateReport(
     { location: vscode.ProgressLocation.Notification, title: "Generating report...", cancellable: false },
     async () => {
       try {
-        const run = await buildRun(scanner, service);
+        let portfolioResult;
+        if (scopePick.value === "portfolio") {
+          portfolioResult = await loadPortfolio();
+          if (portfolioResult.refs.length === 0) {
+            vscode.window.showWarningMessage("No packages configured in your portfolio. Add packages via settings or a portfolio file.");
+            return;
+          }
+        }
+        const run = await buildRun(scanner, service, scopePick.value, portfolioResult);
 
         switch (audiencePick.value) {
           case "executive": {

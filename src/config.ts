@@ -9,6 +9,15 @@ export interface CodeLensConfig {
   refreshOnSave: boolean;
 }
 
+export interface MyPackagesConfig {
+  manual: Array<{ registry: RegistryName; name: string }>;
+  identities: {
+    npm: string[];
+    vscode: string[];
+    docker: string[];
+  };
+}
+
 export interface ExtConfig {
   enabledRegistries: RegistryName[];
   cacheTtlHours: Record<string, number>;
@@ -19,6 +28,7 @@ export interface ExtConfig {
   dockerToken: string;
   maxConcurrentRequests: number;
   codeLens: CodeLensConfig;
+  myPackages: MyPackagesConfig;
 }
 
 const DEFAULT_TTL: Record<string, number> = {
@@ -48,6 +58,14 @@ export function getConfig(): ExtConfig {
       showFreshness: cfg.get<boolean>("codeLens.showFreshness", true),
       showTrend: cfg.get<boolean>("codeLens.showTrend", true),
       refreshOnSave: cfg.get<boolean>("codeLens.refreshOnSave", false),
+    },
+    myPackages: {
+      manual: cfg.get<Array<{ registry: RegistryName; name: string }>>("myPackages.manual", []),
+      identities: {
+        npm: cfg.get<string[]>("myPackages.identities.npm", []),
+        vscode: cfg.get<string[]>("myPackages.identities.vscode", []),
+        docker: cfg.get<string[]>("myPackages.identities.docker", []),
+      },
     },
   };
 }

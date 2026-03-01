@@ -1,6 +1,7 @@
 import type { RegistryName, PackageStats } from "@mcptoolshop/registry-stats";
 import type { PkgRef } from "./scanner.js";
 import type { StatsService } from "./stats-service.js";
+import type { PortfolioResult } from "./portfolio.js";
 import { WorkspaceScanner } from "./scanner.js";
 import { log, classifyError } from "./util.js";
 import { randomUUID } from "crypto";
@@ -8,12 +9,21 @@ import * as vscode from "vscode";
 
 // ── Types ───────────────────────────────────────────────────────────
 
+export type RunScope = "all" | "primary" | "portfolio";
+
+export interface RunScopeInfo {
+  type: RunScope;
+  portfolioSource?: "file" | "settings" | "merged";
+  identityPackages?: number;
+}
+
 export interface Run {
   schemaVersion: "1.0";
   runId: string;
   startedAt: string;
   completedAt: string;
   workspace: { name: string; rootUri: string };
+  scope: RunScopeInfo;
   packages: PkgResult[];
   trace: TraceEntry[];
   summary: RunSummary;
@@ -31,7 +41,7 @@ export interface PkgResult {
 export interface TraceEntry {
   time: string;
   level: "debug" | "info" | "warn" | "error";
-  component: "scanner" | "cache" | "fetcher" | "reporter";
+  component: "scanner" | "cache" | "fetcher" | "reporter" | "portfolio";
   event: string;
   data?: Record<string, unknown>;
   durationMs?: number;
@@ -48,12 +58,11 @@ export interface RunSummary {
 
 // ── Builder ─────────────────────────────────────────────────────────
 
-export type RunScope = "all" | "primary";
-
 export async function buildRun(
   scanner: WorkspaceScanner,
   service: StatsService,
   scope: RunScope = "all",
+  portfolioResult?: PortfolioResult,
 ): Promise<Run> {
   const start = Date.now();
   const trace: TraceEntry[] = [];
@@ -66,28 +75,45 @@ export async function buildRun(
     trace.push({ time: new Date().toISOString(), level, component, event, data });
   };
 
-  // 1. Scan workspace
-  addTrace("info", "scanner", "scan.start");
-  const scanStart = Date.now();
-  await scanner.scan();
-  addTrace("info", "scanner", "scan.complete", {
-    count: scanner.refs.length,
-    durationMs: Date.now() - scanStart,
-  });
-
-  // 2. Pick refs based on scope
   let refs: readonly PkgRef[];
-  if (scope === "primary" && scanner.primary) {
-    refs = [scanner.primary];
-  } else {
-    // Deduplicate: only keep unique registry+name combos
-    const seen = new Set<string>();
-    refs = scanner.refs.filter((r) => {
-      const key = `${r.registry}:${r.name}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
+  let scopeInfo: RunScopeInfo;
+
+  if (scope === "portfolio" && portfolioResult) {
+    // Portfolio mode — skip scanner, use portfolio refs
+    addTrace("info", "portfolio", "portfolio.load", {
+      source: portfolioResult.source,
+      packages: portfolioResult.refs.length,
+      identityPackages: portfolioResult.identityPackages,
+      errors: portfolioResult.errors.length,
     });
+    refs = portfolioResult.refs;
+    scopeInfo = {
+      type: "portfolio",
+      portfolioSource: portfolioResult.source,
+      identityPackages: portfolioResult.identityPackages,
+    };
+  } else {
+    // Scanner mode — existing behavior
+    addTrace("info", "scanner", "scan.start");
+    const scanStart = Date.now();
+    await scanner.scan();
+    addTrace("info", "scanner", "scan.complete", {
+      count: scanner.refs.length,
+      durationMs: Date.now() - scanStart,
+    });
+
+    if (scope === "primary" && scanner.primary) {
+      refs = [scanner.primary];
+    } else {
+      const seen = new Set<string>();
+      refs = scanner.refs.filter((r) => {
+        const key = `${r.registry}:${r.name}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+    scopeInfo = { type: scope === "primary" ? "primary" : "all" };
   }
 
   // 3. Fetch stats
@@ -107,7 +133,7 @@ export async function buildRun(
       registry: ref.registry,
       name: ref.name,
       manifest: {
-        file: ref.file.fsPath,
+        file: ref.file.toString(),
         line: ref.range?.start.line,
       },
     };
@@ -161,6 +187,7 @@ export async function buildRun(
       name: workspace?.name ?? "unknown",
       rootUri: workspace?.uri.toString() ?? "",
     },
+    scope: scopeInfo,
     packages: results,
     trace,
     summary,

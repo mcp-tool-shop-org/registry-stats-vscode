@@ -77,8 +77,12 @@ function buildDocDefinition(run: Run): PdfDocDef {
     color: "#1a1a2e",
     margin: [0, 0, 0, 4],
   });
+  const dateStr = new Date(run.startedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const subtitle = run.scope?.type === "portfolio"
+    ? `My Packages Portfolio (${run.scope.portfolioSource ?? "unknown"}) \u2022 ${dateStr}`
+    : `${run.workspace.name} \u2022 ${dateStr}`;
   content.push({
-    text: `${run.workspace.name} \u2022 ${new Date(run.startedAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`,
+    text: subtitle,
     fontSize: 10,
     color: "#666",
     margin: [0, 0, 0, 16],

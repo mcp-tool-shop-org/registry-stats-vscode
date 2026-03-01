@@ -14,6 +14,7 @@ function makeRun(overrides?: Partial<Run>): Run {
     startedAt: "2026-03-01T12:00:00.000Z",
     completedAt: "2026-03-01T12:00:02.000Z",
     workspace: { name: "test-workspace", rootUri: "file:///test" },
+    scope: { type: "all" },
     packages: [
       {
         registry: "npm",
@@ -94,6 +95,20 @@ describe("renderDevMarkdown", () => {
     expect(md).toContain("| Total packages | 0 |");
     expect(md).not.toContain("## Errors");
   });
+
+  it("includes scope metadata", () => {
+    const md = renderDevMarkdown(makeRun({ scope: { type: "all" } }));
+    expect(md).toContain("**Scope:** all");
+  });
+
+  it("includes portfolio source when scope is portfolio", () => {
+    const md = renderDevMarkdown(makeRun({
+      scope: { type: "portfolio", portfolioSource: "merged", identityPackages: 5 },
+    }));
+    expect(md).toContain("**Scope:** portfolio");
+    expect(md).toContain("**Portfolio source:** merged");
+    expect(md).toContain("**Identity-discovered packages:** 5");
+  });
 });
 
 describe("renderLLMJsonl", () => {
@@ -147,5 +162,15 @@ describe("renderLLMJsonl", () => {
     const traces = lines.filter((l) => l.type === "trace");
     expect(traces.length).toBe(4);
     expect(traces[0].event).toBe("scan.start");
+  });
+
+  it("includes scope in header", () => {
+    const jsonl = renderLLMJsonl(makeRun({
+      scope: { type: "portfolio", portfolioSource: "file", identityPackages: 3 },
+    }));
+    const header = JSON.parse(jsonl.split("\n")[0]);
+    expect(header.scope.type).toBe("portfolio");
+    expect(header.scope.portfolioSource).toBe("file");
+    expect(header.scope.identityPackages).toBe(3);
   });
 });

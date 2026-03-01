@@ -17,6 +17,7 @@ export function renderLLMJsonl(run: Run): string {
     started_at: run.startedAt,
     completed_at: run.completedAt,
     workspace: run.workspace,
+    scope: run.scope,
   }));
 
   // One line per package

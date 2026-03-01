@@ -50,6 +50,7 @@ function run(packages: PkgResult[]): Run {
     startedAt: new Date().toISOString(),
     completedAt: new Date().toISOString(),
     workspace: { name: "test", rootUri: "file:///test" },
+    scope: { type: "all" },
     packages,
     trace: [],
     summary: {

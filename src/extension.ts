@@ -72,6 +72,15 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
   );
 
+  // 9. Watch portfolio file
+  const portfolioWatcher = vscode.workspace.createFileSystemWatcher(
+    "**/registry-stats.portfolio.json",
+  );
+  portfolioWatcher.onDidChange(() => log("Portfolio file changed."));
+  portfolioWatcher.onDidCreate(() => log("Portfolio file created."));
+  portfolioWatcher.onDidDelete(() => log("Portfolio file deleted."));
+  context.subscriptions.push(portfolioWatcher);
+
   log("Registry Stats activated.");
 }
 

@@ -11,6 +11,13 @@ export function renderDevMarkdown(run: Run): string {
   lines.push(`**Run ID:** \`${run.runId}\``);
   lines.push(`**Started:** ${run.startedAt}`);
   lines.push(`**Duration:** ${run.summary.durationMs}ms`);
+  lines.push(`**Scope:** ${run.scope.type}`);
+  if (run.scope.portfolioSource) {
+    lines.push(`**Portfolio source:** ${run.scope.portfolioSource}`);
+  }
+  if (run.scope.identityPackages != null) {
+    lines.push(`**Identity-discovered packages:** ${run.scope.identityPackages}`);
+  }
   lines.push("");
 
   // Summary
