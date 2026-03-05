@@ -14,7 +14,7 @@ export const config: SiteConfig = {
     headlineAccent: 'in your editor.',
     description: 'See npm, PyPI, NuGet, VS Code Marketplace, and Docker Hub download stats for every dependency — right where you code.',
     primaryCta: { href: 'https://marketplace.visualstudio.com/items?itemName=mcp-tool-shop.registry-stats-vscode', label: 'Install from Marketplace' },
-    secondaryCta: { href: '#features', label: 'See features' },
+    secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
     previews: [
       { label: 'Status Bar', code: '$(package) 67.4M/wk' },
       { label: 'Hover', code: 'express — npm\nWeekly:  67,367,773\nMonthly: 283,472,710' },
